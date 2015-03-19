@@ -1,6 +1,10 @@
 # This module contains modules and classes useful in determining sensor location
 # Node - class representing a node, or sensor
 # load_known_nodes - loads the known nodes from a csv file
+# load_rssi - loads the rssi value into a matrix
+# set_rssi - sets the rssi value of each node so that every node has access to the rssi value of its links with other
+#   nodes
+
 
 import sys
 
@@ -48,6 +52,8 @@ def load_known_nodes(filename):
         for line in file:
             # get each item that is comma-separated
             tokens = line.split(',')
+            if '\n' in tokens[1]:
+                tokens[1] = tokens[1].replace('\n', '')
             sensor_list.append(Node(tokens[0], tokens[1]))
         file.close()
 
@@ -102,11 +108,14 @@ def load_rssi(filename):
         # compile the 3 lists into the matrix
         for i in range(len(sending)):
             rssi[sending[i]][receiving[i]] = value[i]
-        # each element in the matrix is a list of all rssi values - average them together into a single value
+        # each element in the matrix is a list of all rssi values - average each list to get a single number for each
+        # element
         for i in range(len(rssi)):
             for j in range(len(rssi[i])):
                 try:
                     rssi[i][j] = sum(rssi[i][j]) / len(rssi[i][j])
+                # Bad juju here, but I'm feeling lazy. Possible errors are divide by zero and type error for a single
+                # value instead of a list
                 except Exception as e:
                     pass
 
@@ -114,11 +123,16 @@ def load_rssi(filename):
     return rssi
 
 
-def get_distances(room, unknown_node):
+def set_rssi(nodes, rssi):
     """
-    Calculate the distances from a room to all known nodes based on the rssi values contained within unknown node
-    :param room: The room to be examined
-    :param node: The unknown node
-    :return: A list of distances from room to known nodes
+    Sets each nodes rssi links to other nodes
+    :param nodes: A list of nodes
+    :param rssi: a table of rssi values between nodes
+    :return: an updated list of nodes
     """
-    pass
+    for i, node in enumerate(nodes):
+        data = rssi[int(node.id)]
+        for j, value in enumerate(data):
+            nodes[i].links[str(j)] = value
+
+    return nodes

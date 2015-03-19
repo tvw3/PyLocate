@@ -38,8 +38,8 @@ class Room():
         :return: a tuple (x,y)
         """
         # Rooms measured to the top left corner, so we add width, and subtract height to get midpoints
-        c_x = (self.x + self.width) / 2
-        c_y = (self.y - self.height) / 2
+        c_x = (self.x + (self.x + self.width)) / 2
+        c_y = (self.y + (self.y - self.height)) / 2
         return c_x, c_y
 
     def get_walls_between(self, other_room):
