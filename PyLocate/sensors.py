@@ -40,16 +40,16 @@ def load_known_nodes(filename):
     try:
         # make sure the data is in the resources folder
         file = open('res/data/' + filename, 'r')
+    # most likely a file not found error
+    except IOError as e:
+        print('Error: could not load data from ' + filename)
+    else:
         # Go through each line of the file
         for line in file:
             # get each item that is comma-separated
             tokens = line.split(',')
             sensor_list.append(Node(tokens[0], tokens[1]))
-
         file.close()
-    # most likely a file not found error
-    except IOError as e:
-        print('Error: could not load data from ' + filename)
 
     return sensor_list
 
@@ -67,11 +67,18 @@ def load_rssi(filename):
         print('Error: Cannot load ' + filename + '. File type must be csv')
         sys.exit(-1)
 
-    rssi = {}
+    rssi = []
+    sending = []
+    receiving = []
+    value = []
 
     try:
         # make sure the data is in the resources folder
         file = open('res/data/' + filename, 'r')
+    # most likely a file not found error
+    except IOError as e:
+        print('Error: could not load data from ' + filename)
+    else:
         # Go through each line of the file
         for line in file:
             # get each item that is comma-separated
@@ -81,21 +88,31 @@ def load_rssi(filename):
                 int(tokens[0])
             except ValueError as e:
                 continue
-            # the first line of the file, we can just append this without doing any formatting
-            if tokens[0] == '\n':
-                continue
             else:
-                # convert the number of walls from strings to floats
-                for index, token in enumerate(tokens[1:]):
-                    tokens[index + 1] = float(token)
-                rssi.append(tokens)
+                # to handle weird cases where a line contains only a newline
+                if tokens[0] == '\n':
+                    continue
+                else:
+                    sending.append(int(tokens[0]))
+                    receiving.append(int(tokens[1]))
+                    value.append(float(tokens[2]))
+
+        # Create the matrix for sending and receiving nodes
+        rssi = [[[] for row in range(max(sending) + 1)] for col in range(max(receiving) + 1)]
+        # compile the 3 lists into the matrix
+        for i in range(len(sending)):
+            rssi[sending[i]][receiving[i]] = value[i]
+        # each element in the matrix is a list of all rssi values - average them together into a single value
+        for i in range(len(rssi)):
+            for j in range(len(rssi[i])):
+                try:
+                    rssi[i][j] = sum(rssi[i][j]) / len(rssi[i][j])
+                except Exception as e:
+                    pass
 
         file.close()
-    # most likely a file not found error
-    except IOError as e:
-        print('Error: could not load data from ' + filename)
+    return rssi
 
-    return rssi_matrix
 
 def get_distances(room, unknown_node):
     """

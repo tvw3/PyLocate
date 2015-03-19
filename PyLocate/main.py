@@ -7,6 +7,6 @@ n = load_known_nodes('node_locations.csv')
 set_walls(r,w)
 r238 = r['R238']
 r236 = r['R236']
-print(len(r))
-for room in r:
-    print(r[room].walls)
+for row in load_rssi('rssi_data_trial_1.csv'):
+    print(row)
+
